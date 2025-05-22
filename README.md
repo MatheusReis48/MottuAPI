@@ -44,10 +44,7 @@ O projeto segue uma arquitetura em camadas, com separação clara de responsabil
    git clone https://github.com/MatheusReis48/MottuAPI
    ```
 
-2. Navegue até a pasta do projeto:
-   ```
-   cd MottuAPI_Novo
-   ```
+2. Navegue até a pasta do projeto
 
 3. Restaure os pacotes NuGet:
    ```
