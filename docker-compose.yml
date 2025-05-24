@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mottu-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mottu-api-container
+    ports:
+      # Map host port 80 to container port 5038 (internal HTTP port)
+      - "80:5038"
+      # If you configure HTTPS on port 7158 internally and open 443 on Azure:
+      # - "443:7158" 
+    environment:
+      # IMPORTANT: Replace the placeholder below with your actual Oracle Cloud connection string
+      - ConnectionStrings__DefaultConnection=SEU_ORACLE_CONNECTION_STRING_AQUI
+      # Ensure the application environment is set appropriately (e.g., Production, Staging)
+      - ASPNETCORE_ENVIRONMENT=Production 
+      # This ensures the API listens on all interfaces inside the container on port 5038
+      - ASPNETCORE_URLS=http://+:5038 
+    restart: unless-stopped
+    # Optional: Add healthcheck if your API supports it
+    # healthcheck:
+    #   test: ["CMD", "curl", "--fail", "http://localhost:5038/health"] # Adjust endpoint as needed
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+

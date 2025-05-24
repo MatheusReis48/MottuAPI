@@ -1,0 +1,50 @@
+# Use the .NET 8 SDK Alpine image for building the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+WORKDIR /source
+
+# Copy solution and project files
+COPY MottuAPI.sln .
+COPY MottuAPI.Application/*.csproj ./MottuAPI.Application/
+COPY MottuAPI.Domain/*.csproj ./MottuAPI.Domain/
+COPY MottuAPI.Infrastructure/*.csproj ./MottuAPI.Infrastructure/
+# Add other projects if they exist (e.g., Presentation)
+# COPY MottuAPI.Presentation/*.csproj ./MottuAPI.Presentation/
+
+# Restore dependencies
+RUN dotnet restore MottuAPI.sln
+
+# Copy the rest of the source code
+COPY . .
+
+# Publish the application (assuming MottuAPI.Application is the entry point)
+# If another project is the entry point (e.g., MottuAPI.Presentation), change the path below
+WORKDIR /source/MottuAPI.Application
+RUN dotnet publish -c Release -o /app/publish --no-restore
+
+# Use the .NET 8 ASP.NET Core runtime Alpine image for the final stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
+WORKDIR /app
+
+# Create a non-root user and group
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy the published application from the build stage
+COPY --from=build /app/publish .
+
+# Set ownership to the non-root user
+RUN chown -R appuser:appgroup /app
+
+# Switch to the non-root user
+USER appuser
+
+# Set environment variables
+# The Oracle connection string should be passed as an environment variable during 'docker run'
+# Example: docker run -e ConnectionStrings__DefaultConnection="YOUR_ORACLE_CONN_STRING" ...
+ENV ASPNETCORE_URLS=http://+:5038
+# Expose the internal port the application listens on (matches ASPNETCORE_URLS)
+EXPOSE 5038
+
+# Set the entry point for the application
+# Ensure 'MottuAPI.Application.dll' is the correct entry point DLL
+ENTRYPOINT ["dotnet", "MottuAPI.Application.dll"]
+
